@@ -10,18 +10,18 @@ def download_index_data():
     prices.to_csv(INDEX_DATA)
 
 #------ Reads data from csv file with ------#
-def read_raw_data(filename, **kwargs):
+def read_raw_data(filename, **kwargs) -> pd.DataFrame:
     raw_data = pd.read_csv(filename, index_col = None).dropna()
     raw_data[DATE_COL] = pd.to_datetime(raw_data[DATE_COL], format=DATE_FORMAT)
     return raw_data
 
 #----- read index data -------#
-def read_index_data(**kwargs):
+def read_index_data(**kwargs) -> pd.DataFrame:
     raw_prices = read_raw_data(INDEX_DATA, **kwargs)
     return raw_prices
 
 #------ Get data -------#
-def get_data(**kwargs):
+def get_data(**kwargs) -> pd.DataFrame:
 
     col_list = ["Date"]
 
