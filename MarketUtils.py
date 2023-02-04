@@ -31,8 +31,8 @@ def get_data(**kwargs):
        type = "index"
 
     if type == 'index':
-       if 'list' in kwargs:
-           col_list += kwargs['list']
+       if 'col_list' in kwargs:
+           col_list += kwargs['col_list']
        else:
            col_list += INDEX_LIST
 
