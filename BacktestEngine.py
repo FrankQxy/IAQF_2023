@@ -25,16 +25,23 @@ class backtest_walk_forward():
     """Simple walk-forward backtesting engine could be used for Monte Carlo paths
     """
     _QManager = [] # queue of strategy objects
-    _data = []
-    _capital = 100
-    _assets = []
+    _price_data = [] 
+    _alter_data = []
+    _capital = 100 
     _risk_manager = []
 
-    def __init__(self,data,assets,capital=100, risk_manager = lambda x:x):
-        
-        self._data = data
+    def __init__(self,price_data,alter_data,capital=100,risk_manager = lambda x:x):
+        """Initialization
+
+        Args:
+            price_data (DataFrame): date , name1, name2, ....
+            alter_data (DataFrame): similar to price data
+            capital (int, optional): _description_. Defaults to 100.
+            risk_manager (risk_manager object, optional): _description_. Defaults to lambdax:x.
+        """
+        self._price_data = price_data
+        self._alter_data = alter_data
         self._capital = capital
-        self._assets = assets
         self._risk_manager = risk_manager
 
     def add_strategy(self, strategy):
@@ -54,6 +61,8 @@ class backtest_walk_forward():
         return self
 
     def run_backtest(self):
+        
+
         
 
 
