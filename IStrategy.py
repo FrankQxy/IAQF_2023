@@ -40,7 +40,7 @@ class IStrategy():
         """generate signal from curretn price levels
 
         Args:
-            element (_type_): dict type asset price pair
+            element (dict): dict type asset price pair
 
         Returns:
             dict: a dict of asset:position
@@ -58,7 +58,7 @@ class IStrategy():
         """custom rule to add data like past 10 day price series
 
         Args:
-            element (_type_): curretn price levels or something else
+            element (dict): current price levels or something else
         """
         pass
     
@@ -67,7 +67,7 @@ class IStrategy():
         """add new trade to trades database
 
         Args:
-            trade (_type_): dict format asset:position
+            trade (dict): dict format asset:position
         """
         self._trades.append(trade)
 

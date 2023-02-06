@@ -3,33 +3,42 @@ import pandas as pd
 import numpy as np
 from IStrategy import IStrategy
 
-# pass data a dictionary of levels and signal as dictionary of positions
-# positive is buy negative is sell
-def execution_engine(self,data,signal,strategy,risk_manager = lambda x:x) -> float:
+def execution_engine(data,signal) -> float:
+    """Executes trade from the signal
 
-    signal = risk_manager.process_signal(signal,data)
+    Args:
+        data (_type_): data in dict format asset:price
+        signal (_type_): data dict format
+
+    Returns:
+        float: cash flow from trade execution
+    """
     cash_flow = 0.0
     for asset in data:
         price = data[asset]
         position = signal[asset]
         cash_flow += position*price
 
-    if strategy._capital + cash_flow < 0:
-       raise(f"not enough capital to execute order {str(data)}")
-     
-    strategy._capital += cash_flow
-    strategy._trade.append(signal)
     return cash_flow
         
 class backtest_walk_forward():
-
-    _QManager = []
+    """Simple walk-forward backtesting engine
+    """
+    _QManager = [] 
     _data = []
     _capital = 100
     _assets = []
     _risk_manager = []
 
     def __init__(self,data,assets,capital=100, risk_manager = lambda x:x):
+        """Initializer
+
+        Args:
+            data (_type_): _description_
+            assets (_type_): _description_
+            capital (int, optional): _description_. Defaults to 100.
+            risk_manager (_type_, optional): _description_. Defaults to lambdax:x.
+        """
         self._data = data
         self._capital = capital
         self._assets = assets
