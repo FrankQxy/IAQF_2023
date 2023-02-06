@@ -40,10 +40,10 @@ class IStrategy():
         """generate signal from curretn price levels
 
         Args:
-            element (dict): dict type asset price pair
+            element (dict): format asset:price
 
         Returns:
-            dict: a dict of asset:position
+            dict: format asset:position, negative for short and positive for long
         """
         pass
 
@@ -67,7 +67,7 @@ class IStrategy():
         """add new trade to trades database
 
         Args:
-            trade (dict): dict format asset:position
+            trade (dict): dict format asset:position, negative for short and positive for long
         """
         self._trades.append(trade)
 

@@ -7,8 +7,8 @@ def execution_engine(data,signal) -> float:
     """Executes trade from the signal
 
     Args:
-        data (_type_): data in dict format asset:price
-        signal (_type_): data dict format
+        data (dict): format asset:price
+        signal (dict): format asset:position, negative for short and positive for long
 
     Returns:
         float: cash flow from trade execution
@@ -17,28 +17,21 @@ def execution_engine(data,signal) -> float:
     for asset in data:
         price = data[asset]
         position = signal[asset]
-        cash_flow += position*price
+        cash_flow += -position*price
 
     return cash_flow
         
 class backtest_walk_forward():
-    """Simple walk-forward backtesting engine
+    """Simple walk-forward backtesting engine could be used for Monte Carlo paths
     """
-    _QManager = [] 
+    _QManager = [] # queue of strategy objects
     _data = []
     _capital = 100
     _assets = []
     _risk_manager = []
 
     def __init__(self,data,assets,capital=100, risk_manager = lambda x:x):
-        """Initializer
-
-        Args:
-            data (_type_): _description_
-            assets (_type_): _description_
-            capital (int, optional): _description_. Defaults to 100.
-            risk_manager (_type_, optional): _description_. Defaults to lambdax:x.
-        """
+        
         self._data = data
         self._capital = capital
         self._assets = assets
