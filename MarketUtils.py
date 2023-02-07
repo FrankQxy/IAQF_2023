@@ -11,8 +11,8 @@ def download_index_data():
 
 #------ Reads data from csv file with ------#
 def read_raw_data(filename, **kwargs) -> pd.DataFrame:
-    raw_data = pd.read_csv(filename, index_col = None).dropna()
-    raw_data[DATE_COL] = pd.to_datetime(raw_data[DATE_COL], format=DATE_FORMAT)
+    raw_data = pd.read_csv(filename, index_col = DATE_COL).dropna()
+    # raw_data.index = raw_data.index.strftime(DATE_FORMAT)
     return raw_data
 
 #----- read index data -------#
@@ -21,28 +21,26 @@ def read_index_data(**kwargs) -> pd.DataFrame:
     return raw_prices
 
 #------ Get data -------#
-def get_data(**kwargs) -> pd.DataFrame:
+def get_data(type = "index", **kwargs) -> pd.DataFrame:
+    """Primary function to get data from csv
+    Args:
+    kwargs['type'] (str, optional): indicates the type of data needed like "index"
+    kwargs[[start_date,end_date]] (list, optional): start and end date
+    kwargs["col_list"]: list of columns need in the data other than date
+    Will add more as the need arises
 
-    col_list = ["Date"]
-
-    if 'type' in kwargs:
-       type = kwargs['type']
-    else :
-       type = "index"
-
-    if type == 'index':
-       if 'col_list' in kwargs:
-           col_list += kwargs['col_list']
-       else:
-           col_list += INDEX_LIST
-
+    Returns:
+        pd.DataFrame: DataFrame object with index column date
+    """
     data_reader = globals()[FUNC_BIND[type]]
-    raw_data = data_reader(**kwargs)[col_list]
+    if 'col_list' in kwargs:
+        raw_data = data_reader(**kwargs)[kwargs['col_list']]
+    else:
+        raw_data = data_reader(**kwargs)
 
     if 'termDates' in kwargs:
         termDates = kwargs['termDates']
-        mask = (raw_data[DATE_COL] > termDates[0] and raw_data[DATE_COL] < termDates[1])
-        return raw_data.loc[mask]
+        return raw_data.loc[termDates[0]:termDates[1]]
     
     return raw_data
 

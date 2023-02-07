@@ -1,0 +1,2 @@
+def analytics():
+    pass
