@@ -36,7 +36,7 @@ class IStrategy():
         self._data.append(element)
     
     # to be implemented    
-    def generate_signal(element) -> dict:
+    def generate_signal(self, element) -> dict:
         """generate signal from curretn price levels
 
         Args:

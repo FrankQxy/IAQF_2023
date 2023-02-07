@@ -12,7 +12,7 @@ def download_index_data():
 #------ Reads data from csv file with ------#
 def read_raw_data(filename, **kwargs) -> pd.DataFrame:
     raw_data = pd.read_csv(filename, index_col = DATE_COL).dropna()
-    raw_data.index = raw_data.index.strftime(DATE_FORMAT)
+    # raw_data.index = raw_data.index.strftime(DATE_FORMAT)
     return raw_data
 
 #----- read index data -------#
@@ -22,7 +22,17 @@ def read_index_data(**kwargs) -> pd.DataFrame:
 
 #------ Get data -------#
 def get_data(**kwargs) -> pd.DataFrame:
+    """Primary function to get data from csv
+    Args:
+    kwargs['type'] (str, optional): indicates the type of data needed like "index"
+    kwargs[[start_date,end_date]] (list, optional): start and end date
+    kwargs["col_list"]: list of columns need in the data other than date
+    Will add more as the need arises
 
+    Returns:
+        pd.DataFrame: DataFrame object with index column date
+    """
+    col_list = []
     if 'type' in kwargs:
        type = kwargs['type']
     else :
