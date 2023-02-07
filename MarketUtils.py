@@ -49,8 +49,7 @@ def get_data(**kwargs) -> pd.DataFrame:
 
     if 'termDates' in kwargs:
         termDates = kwargs['termDates']
-        mask = (raw_data[DATE_COL] > termDates[0] and raw_data[DATE_COL] < termDates[1])
-        return raw_data.loc[mask]
+        return raw_data.loc[termDates[0]:termDates[1]]
     
     return raw_data
 
