@@ -1,7 +1,10 @@
 #--- Backtesting and execution engine ------#
 import pandas as pd
 import numpy as np
-from IStrategy import IStrategy
+from IStrategy import *
+from MarketUtils import *
+from RiskManagement import *
+from collections import counter
 
 def execution_engine(data,signal) -> float:
     """Executes trade from the signal
@@ -47,7 +50,7 @@ class backtest_walk_forward():
     def add_strategy(self, strategy):
 
         if isinstance(strategy,IStrategy) and strategy not in self._QManager:
-            self._QManager.append(IStrategy)  
+            self._QManager.append(IStrategy) 
         else:
             raise("Pass IStrategy type object or the startegy is already there.")
         return self
@@ -55,20 +58,51 @@ class backtest_walk_forward():
     def remove_startegy(self,strategy): 
 
         if isinstance(strategy,IStrategy) and strategy not in self._QManager:
-            self._QManager.remove(IStrategy)  
+            self._QManager.remove(IStrategy) 
         else:
             raise("Pass IStrategy type object or the startegy is not there")
         return self
 
-    def run_backtest(self):
-        
+    def run_backtest(self) -> pd.DataFrame:
 
-        
+        assets = list(self._price_data.copy())
+        trades = pd.DataFrame(index=self._price_data.index.copy())
+        trades[[asset + "signal" for asset in assets]] = 0
+        trades["capital"] = self._capital
 
+        for index,row in self._price_data:
+            trade = {}
+            curr_price = {}
 
-        
-    
+            for asset in assets:
+                curr_price[asset] = row[asset]
+
+            for strategy in self._QManager:
                 
+                signal = strategy(curr_price)
+                # maybe add risk manager here
+                trade = dict(counter(trade) + counter(signal))
+
+            # maybe add risk manager here
+            cash_flow = execution_engine(curr_price, trade)
+            for asset in trade:
+                trades.loc[index,asset+"signal"] = trade[asset]
+            
+            self._capital += cash_flow
+            trades[index,"capital"] = self._capital
+
+        return trades
+
+    def save_trades(self,trades):
+        path = BASE_DIR + f'\\backtest_{TIMESTAMP()}.csv'
+        trades.to_csv(path)
+    
+
+
+
+
+
+
 
 
     

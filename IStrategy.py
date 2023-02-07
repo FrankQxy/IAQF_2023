@@ -11,9 +11,8 @@ class IStrategy():
     _PnL = 0 # pnl, not needed right now, but again might need it
     _name = "" 
     _trades = [] # trades in the format in a list of dicts {"^DJI":100}
-    _asset_list = []
 
-    def __init__(self, data = [], state="inactive", weight = 1.0, capital=100, name = "PCA", asset_list = ["^GSPC","^RUA"]):
+    def __init__(self, data = [], state="inactive", weight = 1.0, capital=100, name = "PCA"):
         """initialize your strategy
 
         Args:
@@ -22,14 +21,12 @@ class IStrategy():
             weight (float, optional): weight assigned from asset allocation, we might not need it now. Defaults to 1.0.
             capital (int, optional): more flexibility just in case we need capital as input as well. Defaults to 100.
             name (str, optional): identifier of your strategy for backtester to output strategy specific results. Defaults to "PCA".
-            asset_list (list, optional) : list of asset tickers this strategy wants.
         """
         self._data = data
         self._state = state
         self._weight = weight
         self._capital = capital
         self._name = name
-        self._asset_list = asset_list
 
     def __str__(self) ->str:
         return self._name
