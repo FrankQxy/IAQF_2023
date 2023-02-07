@@ -21,7 +21,7 @@ def read_index_data(**kwargs) -> pd.DataFrame:
     return raw_prices
 
 #------ Get data -------#
-def get_data(**kwargs) -> pd.DataFrame:
+def get_data(type = "index", **kwargs) -> pd.DataFrame:
     """Primary function to get data from csv
     Args:
     kwargs['type'] (str, optional): indicates the type of data needed like "index"
@@ -32,20 +32,11 @@ def get_data(**kwargs) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame object with index column date
     """
-    col_list = []
-    if 'type' in kwargs:
-       type = kwargs['type']
-    else :
-       type = "index"
-
-    if type == 'index':
-       if 'col_list' in kwargs:
-           col_list += kwargs['col_list']
-       else:
-           col_list += INDEX_LIST
-
     data_reader = globals()[FUNC_BIND[type]]
-    raw_data = data_reader(**kwargs)[col_list]
+    if 'col_list' in kwargs:
+        raw_data = data_reader(**kwargs)[kwargs['col_list']]
+    else:
+        raw_data = data_reader(**kwargs)
 
     if 'termDates' in kwargs:
         termDates = kwargs['termDates']
