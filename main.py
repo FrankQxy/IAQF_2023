@@ -26,8 +26,9 @@ class dummy(IStrategy):
 # the csv or try parsing it to your local code SEPARATE FROM STARTEGY class
 if __name__ == "__main__":
    price_data = get_data(type ='index',col_list = ['^GSPC', '^IXIC'], termDates = ['1992-01-23','1992-06-01'])
-   strategy = dummy(name = "dummyTest")
+   strategy1 = dummy(name = "dummyTest1")
+   startegy2 = dummy(name = "dummyTest2")
    backtest = backtest_walk_forward(price_data)
-   backtest.add_strategy(strategy)
+   backtest.add_strategy(strategy1).add_strategy(startegy2)
    trades = backtest.run_backtest()
    backtest.save_trades(trades,"DummyStrategy")
