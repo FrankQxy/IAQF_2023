@@ -112,7 +112,7 @@ class backtest_walk_forward():
         Args:
             trades (pd.DataFrame): output from run_backtest
         """
-        path = DATA_PATH + '\\' + filename + f'{TIMESTAMP()}.csv'
+        path = DATA_PATH / (filename + f'_{TIMESTAMP()}.csv')
         trades.to_csv(path)
     
 
