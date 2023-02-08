@@ -76,7 +76,6 @@ class backtest_walk_forward():
 
         # iterating over each row in price data might update with a more optimal code
 
-        i = 0   # would be nice to keep track of the row number
         for index,row in self._price_data.iterrows():
             trade = {}
             curr_price = {}
@@ -88,12 +87,11 @@ class backtest_walk_forward():
             # executing all strategies in queue
             for strategy in self._QManager:
                 
-                signal = strategy.generate_signal(curr_price, i)
+                signal = strategy.generate_signal(curr_price)
                 # maybe add risk manager here
                 # netting all signals
                 # trade = dict(Counter(trade) + Counter(signal))  # not sure what this line does
                 trade = signal
-
 
             # maybe add risk manager here
 
@@ -107,8 +105,6 @@ class backtest_walk_forward():
             # calculates protfolio value
             self._capital += cash_flow
             trades.loc[index,"capital"] = self._capital
-
-            i += 1
 
         return trades
 

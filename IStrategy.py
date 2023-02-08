@@ -36,12 +36,11 @@ class IStrategy():
         self._data.append(element)
 
     # to be implemented    
-    def generate_signal(self,element,index) -> dict:
+    def generate_signal(self,element) -> dict:
         """generate signal from current price levels
 
         Args:
             element (dict): format asset:price
-            index (int): the row number of the csv
 
         Returns:
             dict: format asset: position, negative for short and positive for long
