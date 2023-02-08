@@ -33,7 +33,7 @@ class backtest_walk_forward():
     _capital = 100 
     _risk_manager = []
 
-    def __init__(self,price_data,alter_data = [],capital=100,risk_manager = lambda x:x):
+    def __init__(self,price_data,alter_data = [],capital=0,risk_manager = lambda x:x):
         """Initialization
 
         Args:
@@ -44,7 +44,7 @@ class backtest_walk_forward():
         """
         self._price_data = price_data
         self._alter_data = alter_data
-        self._capital = capital
+        self._capital = capital     # this will override the capital in strategy
         self._risk_manager = risk_manager
 
     def add_strategy(self, strategy):
@@ -75,6 +75,8 @@ class backtest_walk_forward():
         trades = pd.DataFrame(index=self._price_data.index.copy())
 
         # iterating over each row in price data might update with a more optimal code
+
+        i = 0   # would be nice to keep track of the row number
         for index,row in self._price_data.iterrows():
             trade = {}
             curr_price = {}
@@ -83,13 +85,15 @@ class backtest_walk_forward():
             for asset in assets:
                 curr_price[asset] = row[asset]
 
-            # executing all startegies in queue
+            # executing all strategies in queue
             for strategy in self._QManager:
                 
-                signal = strategy.generate_signal(curr_price)
+                signal = strategy.generate_signal(curr_price, i)
                 # maybe add risk manager here
                 # netting all signals
-                trade = dict(Counter(trade) + Counter(signal))
+                # trade = dict(Counter(trade) + Counter(signal))  # not sure what this line does
+                trade = signal
+
 
             # maybe add risk manager here
 
@@ -104,6 +108,8 @@ class backtest_walk_forward():
             self._capital += cash_flow
             trades.loc[index,"capital"] = self._capital
 
+            i += 1
+
         return trades
 
     def save_trades(self,trades,filename='backtest_'):
@@ -111,7 +117,11 @@ class backtest_walk_forward():
 
         Args:
             trades (pd.DataFrame): output from run_backtest
+            device: path format for mac
         """
+
+        # TypeError: unsupported operand type(s) for +: 'PosixPath' and 'str'
+        # Also not configured for mac
         path = DATA_PATH + '\\' + filename + f'{TIMESTAMP()}.csv'
         trades.to_csv(path)
     

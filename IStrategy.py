@@ -4,12 +4,12 @@ import numpy as np
 class IStrategy():
 
     # local data object to store past data
-    _data = [] 
-    _state = "inactive" 
-    _weight = 1.0 
-    _capital = 100 
+    _data = []
+    _state = "inactive"
+    _weight = 1.0
+    _capital = 100
     _PnL = 0 # pnl, not needed right now, but again might need it
-    _name = "" 
+    _name = ""
     _trades = [] # trades in the format in a list of dicts {"^DJI":100}
 
     def __init__(self, data = [], state="inactive", weight = 1.0, capital=100, name = "PCA"):
@@ -34,16 +34,17 @@ class IStrategy():
     # to be implemented
     def add_data(self,element):
         self._data.append(element)
-    
+
     # to be implemented    
-    def generate_signal(self, element) -> dict:
-        """generate signal from curretn price levels
+    def generate_signal(self,element,index) -> dict:
+        """generate signal from current price levels
 
         Args:
             element (dict): format asset:price
+            index (int): the row number of the csv
 
         Returns:
-            dict: format asset:position, negative for short and positive for long
+            dict: format asset: position, negative for short and positive for long
         """
         pass
 
@@ -61,7 +62,7 @@ class IStrategy():
             element (dict): current price levels or something else
         """
         pass
-    
+
     # to be implemented
     def add_trade(self,trade):
         """add new trade to trades database
