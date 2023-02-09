@@ -75,7 +75,6 @@ class backtest_walk_forward():
         trades = pd.DataFrame(index=self._price_data.index.copy())
 
         # iterating over each row in price data might update with a more optimal code
-
         for index,row in self._price_data.iterrows():
             trade = {}
             curr_price = {}
@@ -90,12 +89,11 @@ class backtest_walk_forward():
                 signal = strategy.generate_signal(curr_price)
                 # maybe add risk manager here
                 # netting all signals
-                #trade = dict(Counter(trade) + Counter(signal))  # not sure what this line does
-                trade = signal
+                trade = dict(Counter(trade) + Counter(signal))
 
             # maybe add risk manager here
 
-            #executes trade and returns cash flow
+            # executes trade and returns cash flow
             cash_flow = execution_engine(curr_price, trade)
 
             # updates trade object with final positions
@@ -110,12 +108,9 @@ class backtest_walk_forward():
 
     def save_trades(self,trades,filename='backtest_'):
         """saves trade data to csv
-
         Args:
             trades (pd.DataFrame): output from run_backtest
-            device: path format for mac
         """
-
         path = DATA_PATH / (filename + f'{TIMESTAMP()}.csv')
         trades.to_csv(path)
     

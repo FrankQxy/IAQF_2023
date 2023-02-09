@@ -22,7 +22,6 @@ class dummy(IStrategy):
 
         return signal
 
-
 # End to end check
 # Basic end to end is done barring analytics. i think right now you can analyze 
 # the csv or try parsing it to your local code SEPARATE FROM STARTEGY class
@@ -38,12 +37,11 @@ class dummy(IStrategy):
 
 # End to end check for the benchmark strategy
 if __name__ == "__main__":
-    price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['2010-01-04','2022-12-30'])
+    price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['2022-10-04','2022-12-30'])
     benchmark = BenchmarkStrategy()
     backtest = backtest_walk_forward(price_data)
     strategy2 = dummy(name = "dummyTest1")
-    backtest.add_strategy(benchmark).add_strategy(strategy2)
+    strategy3 = dummy(name = "dummyTest3")
+    backtest.add_strategy(strategy2).add_strategy(strategy3)
     trades = backtest.run_backtest()
-    backtest.save_trades(trades, "BenchmarkStrategy")
-    # path = './DataFiles/BenchmarkStrategy_' + f'{TIMESTAMP()}.csv'
-    # trades.to_csv(path)
+    backtest.save_trades(trades, "test")
