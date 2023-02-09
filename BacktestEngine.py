@@ -116,9 +116,7 @@ class backtest_walk_forward():
             device: path format for mac
         """
 
-        # TypeError: unsupported operand type(s) for +: 'PosixPath' and 'str'
-        # Also not configured for mac
-        path = DATA_PATH + '\\' + filename + f'{TIMESTAMP()}.csv'
+        path = DATA_PATH / (filename + f'{TIMESTAMP()}.csv')
         trades.to_csv(path)
     
 
