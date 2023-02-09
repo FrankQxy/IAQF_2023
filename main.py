@@ -38,8 +38,8 @@ class dummy(IStrategy):
 
 # End to end check for the benchmark strategy
 if __name__ == "__main__":
-    price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['1992-01-23','1992-06-01'])
-    benchmark = BenchmarkStrategy(data=price_data)
+    price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['2010-01-04','2022-12-30'])
+    benchmark = BenchmarkStrategy()
     backtest = backtest_walk_forward(price_data)
     backtest.add_strategy(benchmark)
     trades = backtest.run_backtest()

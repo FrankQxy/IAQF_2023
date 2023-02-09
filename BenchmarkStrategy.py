@@ -5,60 +5,76 @@ from IStrategy import *
 
 
 class BenchmarkStrategy(IStrategy):
-    def __init__(self, data=pd.DataFrame, name='Benchmark(Distance)',capital=0):
-        super().__init__(data=data, name=name, capital=capital)
-        self._factor = 0.5  # number of standard deviations as threshold
-        self._length = data.shape[0]
-        self._spread = []
-        self._thresh = 0
+    def __init__(self, name='Benchmark(Distance)',capital=0):
+        super().__init__(name=name, capital=capital)
+        self._factor = 2  # number of standard deviations as threshold
+        self._trainlen = 260
+        self._counter = 0
+        self._idx1 = ''
+        self._idx2 = ''
+        self._idx1_price = []
+        self._idx2_price = []
 
-    def get_length(self):
-        return self._length
+    def is_ready(self):
+        return self._counter > self._trainlen
 
-    def get_spread(self):
-        df = self._data
-        idx1 = df[df.columns[0]]
-        idx2 = df[df.columns[1]]
-        n = self._length
-        spread = np.zeros(n)
+    def add_price_pair(self, element):
+        self._idx1_price.append(element[self._idx1])
+        self._idx2_price.append(element[self._idx2])
 
-        for i in range(n):
-            norm1 = (idx1[i] - min(idx1)) / (max(idx1) - min(idx1))
-            norm2 = (idx2[i] - min(idx2)) / (max(idx2) - min(idx2))
-            spread[i] = norm1 - norm2
+    def remove_price_pair(self):
+        self._idx1_price.pop(0)
+        self._idx2_price.pop(0)
 
-        return spread
+    def unready_signal(self, element):
+        if self._counter == 0:
+            self._idx1 = list(element)[0]
+            self._idx2 = list(element)[1]
+        self._counter += 1
+        self.add_price_pair(element)
+        return {self._idx1: 0, self._idx2: 0}
 
-    def get_thresh(self):
-        thresh = self._factor * np.std(self._spread)
+    def get_thresh(self, element):
+        p1 = np.array(self._idx1_price)
+        p2 = np.array(self._idx2_price)
+
+        norm1 = (p1 - max(p1)) / (max(p1) - min(p1))
+        norm2 = (p2 - max(p2)) / (max(p2) - min(p2))
+        norm_diff = norm1 - norm2
+
+        thresh = self._factor * np.std(norm_diff)
         return thresh
 
-    def generate_signal(self, element, index):
-        if index == 0:
-            self._spread = self.get_spread()
-            self._thresh = self.get_thresh()
+    def generate_signal(self, element):
+        if not self.is_ready():
+            return self.unready_signal(element)
 
-        idx = [asset for asset in element]
+        self.remove_price_pair()
+        self.add_price_pair(element)
+        thresh = self.get_thresh(element)
+        norm_p1 = (element[self._idx1] - max(self._idx1_price)) / (max(self._idx1_price) - min(self._idx1_price))
+        norm_p2 = (element[self._idx2] - max(self._idx2_price)) / (max(self._idx2_price) - min(self._idx2_price))
+        spread = norm_p1 - norm_p2
 
         # Enter long position
-        if self._spread[index] < -self._thresh and self._state == 'inactive':
+        if spread < -thresh and self._state == 'inactive':
             self._state = 'long'
-            return {idx[0]: 1, idx[1]: -1}
+            return {self._idx1: 1, self._idx2: -1}
 
         # Close long position
-        if self._spread[index] > 0 and self._state == 'long':
+        if spread > 0 and self._state == 'long':
             self._state = 'inactive'
-            return {idx[0]: -1, idx[1]: 1}
+            return {self._idx1: -1, self._idx2: 1}
 
         # Enter short position
-        if self._spread[index] > self._thresh and self._state == 'inactive':
+        if spread > thresh and self._state == 'inactive':
             self._state = 'short'
-            return {idx[0]: -1, idx[1]: 1}
+            return {self._idx1: -1, self._idx2: 1}
 
         # Close short position
-        if self._spread[index] < 0 and self._state == 'short':
+        if spread < 0 and self._state == 'short':
             self._state = 'inactive'
-            return {idx[0]: 1, idx[1]: -1}
+            return {self._idx1: 1, self._idx2: -1}
 
-        return {idx[0]: 0, idx[1]: 0}
+        return {self._idx1: 0, self._idx2: 0}
 

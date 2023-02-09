@@ -90,7 +90,7 @@ class backtest_walk_forward():
                 signal = strategy.generate_signal(curr_price)
                 # maybe add risk manager here
                 # netting all signals
-                # trade = dict(Counter(trade) + Counter(signal))  # not sure what this line does
+                #trade = dict(Counter(trade) + Counter(signal))  # not sure what this line does
                 trade = signal
 
             # maybe add risk manager here
