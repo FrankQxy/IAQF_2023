@@ -17,7 +17,7 @@ def execution_engine(data,signal) -> float:
         float: cash flow from trade execution
     """
     cash_flow = 0.0
-    for asset in data:
+    for asset in signal:
         price = data[asset]
         position = signal[asset]
         cash_flow += -position*price
@@ -89,8 +89,8 @@ class backtest_walk_forward():
                 signal = strategy.generate_signal(curr_price)
                 # maybe add risk manager here
                 # netting all signals
-                trade = dict(Counter(trade) + Counter(signal))
-
+                trade = {x: trade.get(x, 0) + signal.get(x, 0) for x in set(trade).union(signal)}
+                
             # maybe add risk manager here
 
             # executes trade and returns cash flow

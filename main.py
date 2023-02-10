@@ -18,7 +18,7 @@ class dummy(IStrategy):
         self.isodd = True
         signal = {}
         for asset in element:
-            signal[asset] = 1
+            signal[asset] = 0
 
         return signal
 
@@ -42,6 +42,6 @@ if __name__ == "__main__":
     backtest = backtest_walk_forward(price_data)
     strategy2 = dummy(name = "dummyTest1")
     strategy3 = dummy(name = "dummyTest3")
-    backtest.add_strategy(strategy2).add_strategy(strategy3)
+    backtest.add_strategy(benchmark).add_strategy(strategy2)
     trades = backtest.run_backtest()
     backtest.save_trades(trades, "test")
