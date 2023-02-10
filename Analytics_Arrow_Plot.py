@@ -16,6 +16,7 @@ def arrow_plot(price_data, trading_signals):
     :param positions:  (format) standard dataframe of indices trading signal columns
     """
     colors = {1:'red', 0:'green', -1:'blue'}
+    idx0, idx1 = price_data.columns
 
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.plot(price_data, color='black')
@@ -24,3 +25,7 @@ def arrow_plot(price_data, trading_signals):
     ax.scatter(price_data.index, price_data.iloc[:, 1],
                c=np.sign(trading_signals.iloc[:, 0]).map(colors), zorder=3)
     ax.xaxis.set_major_locator(mdates.DayLocator(interval=5))
+    plt.legend([idx0, idx1])
+    plt.title('Position Analysis Plot')
+    ax.set_xlabel(f'Red maker: long {idx0}, short {idx1}\n Blue maker: short {idx0}, long{idx1}\n Green marker: inactive')
+    
