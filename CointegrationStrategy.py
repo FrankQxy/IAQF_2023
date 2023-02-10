@@ -1,51 +1,69 @@
 import numpy as np
+import pandas as pd
 import statsmodels.api as sm
 from IStrategy import IStrategy
 
 
 class CointegrationStrategy(IStrategy):
     def __init__(self):
-        super().__init__()
-        self._trading_ratio = self.compute_trading_ratio()
-        self._spread = self.compute_spread()
-        self._n = self._data.shape[0]
-        self._threshold = self.compute_threshold()
+        super().__init__(data=pd.dataframe, name='Cointegration')
+        self._tradingRatio = 1
+        self._factor = 1  # number of standard deviations as threshold
+        self._std = 1   # threshold = factor * std
+        self._spread = []
+
+        self._assets = []  # should store two asset names when filled
+        self._asset0 = []
+        self._asset1 = []
+
+        self._lastPos = 'inactive'
+
+    def cointegration_test(self):
+        pass
+
+    def is_ready(self):
+        return len(self._asset0) >= 90
 
     def compute_trading_ratio(self):
-        # compute the trading ratio
-        model = sm.OLS(self._data.Y.iloc[:90], self._data.X.iloc[:90])
+        # compute the trading ratio using the recent 90 data
+        model = sm.OLS(self._asset0[-90:], self._asset1[-90:])
         model = model.fit()
-        trading_ratio = model.params[0]
-        return trading_ratio
+        self._tradingRatio = model.params[0]
+        return self._tradingRatio
 
-    def get_trading_ratio(self):
-        return self._trading_ratio
+    def compute_std(self):
+        # compute standard deviation of the spread series using the recent 30 data
+        spread = []
+        for i in range(-30, 0):
+            spread = self._asset0[i] - self._tradingRatio * self._asset1[i]
+        self._spread = spread
+        self._std = np.std(spread)
+        return self._std
 
-    def compute_spread(self):
-        data = self._data
-        trading_ratio = self._trading_ratio
-        spread = data.Y - trading_ratio * data.X
-        return spread
+    def add_data(self, element):
+        if len(self._assets) == 0:
+            self._assets = element.keys()
 
-    def get_spread(self):
-        return self._spread
+        asset0, asset1 = self._assets
+        self._asset0.extend(element[asset0])
+        self._asset1.extend(element[asset1])
 
-    def compute_threshold(self):
-        thresh = np.std(self._spread)
-        self._threshold = thresh
-        return thresh
+    def generate_signal(self, element):  # element (dict): format asset:price
+        # setup
+        self.add_data(element)
+        if not self.is_ready():  # return zero strategy
+            return {self._assets[0]: 0, self._assets[1]: 0}
+        self.compute_trading_ratio()
+        self.compute_std()
+        threshold = self._factor * self._std
 
-    def get_threshold(self):
-        return self._threshold
-
-    def generate_signal(self):
-        # TODO: the strategy is -1 or 1, but the -1 and 1 here means a specific trading ratio
-        strategy = np.zeros(self._n)
-
-        for i in range(1, self._n):
-            if self._spread[i] > self._threshold or (strategy[i - 1] == -1 and self._spread[i] > 0):
-                strategy[i] = -1
-            elif self._spread[i] < -self._threshold or (strategy[i - 1] == 1 and self._spread[i] < 0):
-                strategy[i] = 1
-
-        return strategy
+        # conditions
+        if self._spread[-1] > threshold or (self._lastPos == 'short0' and self._spread[-1] > 0):
+            self._lastPos = 'short0'
+            return {self._assets[0]: -1, self._assets[1]: self._tradingRatio}
+        elif self._spread[-1] < -threshold or (self._lastPos == 'long0' and self._spread[-1] <0):
+            self._lastPos = 'long0'
+            return {self._assets[0]: 1, self._assets[1]: -self._tradingRatio}
+        else:
+            self._lastPos = 'inactive'
+            return {self._assets[0]: 0, self._assets[1]: 0}
