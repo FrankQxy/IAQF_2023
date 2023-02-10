@@ -93,6 +93,7 @@ class AnalyticsEngine():
         df2 = pd.DataFrame([al], columns=['Total_return','Sharpe_ratio','Net_profit'])
         path2 = DATA_PATH / (filename + 'Analytics' + f'{TIMESTAMP()}.csv')
 
+        # Save the files
         df.to_csv(path1)
         df2.to_csv(path2)
 

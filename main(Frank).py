@@ -30,4 +30,4 @@ if __name__ == "__main__":
     trades = backtest.run_backtest()
     backtest.save_trades(trades, "test")
     analytics = AnalyticsEngine(trade=trades, data=price_data)
-    analytics.save_analytics()
+    analytics.save_analytics(filename='Benchmark')
