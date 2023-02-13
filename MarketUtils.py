@@ -4,6 +4,7 @@ from Configuration import *
 import yfinance as yf
 from datetime import datetime, timedelta
 
+
 #------- download index data ------#
 def download_index_data():
     prices = yf.download(INDEX_LIST).dropna()['Adj Close']
