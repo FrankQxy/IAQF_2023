@@ -50,7 +50,7 @@ class BenchmarkStrategy(IStrategy):
         idx2 = self._data.columns[1]
         spread = self._data[idx1] - self._data[idx2]
         spread.name = 'Spread'
-        path = './Benchmark/' + name
+        path = './Benchmark/' + name + '_' + idx1[1:] + '_' + idx2[1:]
         spread.to_csv(path + '.csv')
 
         if plot:

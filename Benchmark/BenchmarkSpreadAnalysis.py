@@ -5,7 +5,7 @@ import statsmodels.api as sm
 
 
 def clean_data():
-    spread = pd.read_csv('./Benchmark/BenchmarkSpread.csv')
+    spread = pd.read_csv('./Benchmark/BenchmarkSpread_GSPC_IXIC.csv')
     vix_data = pd.read_csv('./DataFiles/vix_data.csv')
     yld = pd.read_csv('./DataFiles/yield.csv')
 
