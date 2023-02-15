@@ -1,5 +1,6 @@
 #------ strategy interface --------#
 import numpy as np
+import pandas as pd
 
 class IStrategy():
 
@@ -44,6 +45,15 @@ class IStrategy():
 
         Returns:
             dict: format asset: position, negative for short and positive for long
+        """
+        pass
+
+    def get_spreads(self) -> pd.DataFrame:
+        """return spreads that has been generated in the backtest
+
+
+        Returns:
+            pd.DataFrame: the spreads that has been generated in the backtest
         """
         pass
 
