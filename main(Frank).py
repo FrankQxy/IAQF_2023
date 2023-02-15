@@ -9,10 +9,10 @@ from Benchmark import BenchmarkSpreadAnalysis
 
 
 if __name__ == "__main__":
-    price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['1992-01-02','2011-12-30'])
+    price_data = get_data(type='index', col_list=['^IXIC', '^RUA'], termDates=['1992-01-02','2011-12-30'])
     benchmark = BenchmarkStrategy(data=price_data)
     benchmark.save_spread()
-    print(BenchmarkSpreadAnalysis.linear_regression())
+    #print(BenchmarkSpreadAnalysis.linear_regression())
 
 
 ''' backtest = backtest_walk_forward(price_data)

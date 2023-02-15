@@ -56,7 +56,7 @@ class BenchmarkStrategy(IStrategy):
         if plot:
             n = len(spread)
             plt.figure(figsize=(12, 8))
-            plt.title('Distance approach SP500 - NASDAQ spread', size=20)
+            plt.title(f'Distance approach {idx1[1:]}-{idx2[1:]} spread', size=20)
             plt.plot(spread.index, spread)
             plt.xticks(spread.index[::n // 6])
             plt.xlabel('time', size=15)
