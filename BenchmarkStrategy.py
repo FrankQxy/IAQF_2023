@@ -5,8 +5,8 @@ from IStrategy import *
 
 
 class BenchmarkStrategy(IStrategy):
-    def __init__(self, name='Benchmark(Distance)',capital=0):
-        super().__init__(name=name, capital=capital)
+    def __init__(self, name='BenchmarkStrategy', data=[]):
+        super().__init__(name=name, data=data)
         self._factor = 2  # number of standard deviations as threshold
         self._trainlen = 260
         self._counter = 0
@@ -45,6 +45,24 @@ class BenchmarkStrategy(IStrategy):
         thresh = self._factor * np.std(norm_diff)
         return thresh
 
+    def save_spread(self, plot=True, name='BenchmarkSpread'):
+        idx1 = self._data.columns[0]
+        idx2 = self._data.columns[1]
+        spread = self._data[idx1] - self._data[idx2]
+        spread.name = 'Spread'
+        path = './Benchmark/' + name
+        spread.to_csv(path + '.csv')
+
+        if plot:
+            n = len(spread)
+            plt.figure(figsize=(12, 8))
+            plt.title('Distance approach SP500 - NASDAQ spread', size=20)
+            plt.plot(spread.index, spread)
+            plt.xticks(spread.index[::n // 6])
+            plt.xlabel('time', size=15)
+            plt.ylabel('spread', size=15)
+            plt.savefig(path + '.png')
+
     def generate_signal(self, element):
         if not self.is_ready():
             return self.unready_signal(element)
@@ -77,4 +95,3 @@ class BenchmarkStrategy(IStrategy):
             return {self._idx1: 1, self._idx2: -1}
 
         return {self._idx1: 0, self._idx2: 0}
-
