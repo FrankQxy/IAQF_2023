@@ -44,7 +44,7 @@ class StochasticOUStrategy(IStrategy):
         super().__init__(data=data, state=state, weight=weight, capital=capital, name = "Stochastic--OU")
         self._data={}
 
-    def generate_signal(self,element,index):
+    def generate_signal(self,element):
         idx = [asset for asset in element]
         #storing data
         if(len(self._data)==0):
@@ -53,17 +53,18 @@ class StochasticOUStrategy(IStrategy):
         else:
             self._data[idx[0]].append(element[idx[0]])
             self._data[idx[1]].append(element[idx[1]])
-        if(len(self._data[idx[0]])<DAYS):
+        if(len(self._data[idx[0]])<DAYS+1):
             self._current_position={idx[0]: 0, idx[1]: 0}
             self._state="inactive"
             return {idx[0]: 0, idx[1]: 0}
         if(self._remaining==0):
             #can use up to index-1 to callibrate
-            self.callibration(idx0=np.array(self._data[idx[0]][index-60:index]),idx1=np.array(self._data[idx[1]][index-60:index]))
+            self.callibration(idx0=np.array(self._data[idx[0]][-61:-1]),idx1=np.array(self._data[idx[1]][-61:-1]))
+            print("self._beta   ",self._beta)
             self._remaining=SAFE
         self._remaining-=1
         current_spread=np.log(element[idx[0]])-self._beta*np.log(element[idx[1]])
-        self._spreads.append(current_spread)
+        self._spreads.append(element[idx[0]]-self._beta*element[idx[1]])
         if(self._current_position[idx[0]]>0 and element[idx[0]]-current_spread>=self._bl):
             self._current_position={idx[0]: 0, idx[1]: 0}
             self._state="inactive"
@@ -96,23 +97,21 @@ class StochasticOUStrategy(IStrategy):
         def given_beta(b):
             dt=1
             xab=np.array([idx0[i]-idx1[i]*b for i in range(0,DAYS)])
-            print(xab)
+            # print(xab)
             xx=sum(xab[:-1])
             xy=sum(xab[1:])
             xxx=sum((xab**2)[:-1])
             xxy=np.dot(xab[:-1],xab[1:])
             xyy=np.dot(xab[1:],xab[1:])
             theta=(xy*xxx-xx*xxy)/(n*(xxx-xxy)-(xx**2-xx*xy))
-            print("@@@@@@@@@@@@@@@@@@@@@@ theta   ",theta)
+            # print("@@@@@@@@@@@@@@@@@@@@@@ theta   ",theta)
 
             miu=-(1/dt)*np.log((xxy-theta*xx-theta*xy+n*(theta)**2)/(xxx-2*theta*xx+n*(theta)**2))
-            print("@@@@@@@@@@@@@@@@@@@@@@ miu   ",miu)
+            # print("@@@@@@@@@@@@@@@@@@@@@@ miu   ",miu)
 
             sigma=np.sqrt(((2*miu)/(n*(1-np.exp(-2*miu*dt))))*(xyy-2*np.exp(-miu*(dt))*xxy+np.exp(-2*miu*dt)*xxx
             -2*theta*(1-np.exp(-miu*dt))*(xy-np.exp(-miu*dt)*xx)+n*(theta)**2*(1-np.exp(-miu*dt))**2))
-            print("@@@@@@@@@@@@@@@@@@@@@@ sigma   ",sigma)
-            #print()
-            #print()
+            # print("@@@@@@@@@@@@@@@@@@@@@@ sigma   ",sigma)
 
 
             return theta, miu, sigma
@@ -131,7 +130,7 @@ class StochasticOUStrategy(IStrategy):
             return -0.5*(np.log(2*np.pi))-np.log(sigma_c)-summation/(2*n*(sigma_c**2))
         
         def neg_l(b):
-            print("                      b  ",-l(b))
+            # print("                      b  ",-l(b))
             return -l(b)
 
         self._beta = minimize_scalar(neg_l).x
@@ -172,8 +171,8 @@ class StochasticOUStrategy(IStrategy):
         # print(self._as,self._bs,self._al,self._bl)
         # #calculating the boundaries
 
-        
-
+    def get_spreads(self) -> pd.DataFrame:
+        return pd.DataFrame(self._spreads)
         
 
     def stop_loss():
@@ -181,6 +180,17 @@ class StochasticOUStrategy(IStrategy):
         pass
 
 
-test = StochasticOUStrategy()
-test.callibration(np.array([220,190,220,190,220,190]),np.array([110,101,100,100,100,110]))
-print(test._beta)
+
+# test = StochasticOUStrategy()
+# test.callibration(np.array([220,190,220,190,220,190]),np.array([110,101,100,100,100,110]))
+# print(test._beta)
+
+price_data = get_data(type='index', col_list=['^GSPC', '^IXIC'], termDates=['2022-01-04','2022-12-30'])
+strategy = StochasticOUStrategy()
+backtest = backtest_walk_forward(price_data)
+backtest.add_strategy(strategy)
+trades = backtest.run_backtest()
+print(trades)
+spread = strategy.get_spreads()
+for i in range(59,187):
+    print(spread[i])
