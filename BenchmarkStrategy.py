@@ -10,8 +10,8 @@ class BenchmarkStrategy(IStrategy):
         self._factor = 2  # number of standard deviations as threshold
         self._trainlen = 260
         self._counter = 0
-        self._idx1 = ''
-        self._idx2 = ''
+        self._idx1 = self._data.columns[0]
+        self._idx2 = self._data.columns[1]
         self._idx1_price = []
         self._idx2_price = []
 
@@ -34,31 +34,38 @@ class BenchmarkStrategy(IStrategy):
         self.add_price_pair(element)
         return {self._idx1: 0, self._idx2: 0}
 
-    def get_thresh(self, element):
-        p1 = np.array(self._idx1_price)
-        p2 = np.array(self._idx2_price)
+    def get_spread(self):
+        p1 = np.array(self._data[self._idx1])
+        p2 = np.array(self._data[self._idx2])
 
-        norm1 = (p1 - max(p1)) / (max(p1) - min(p1))
-        norm2 = (p2 - max(p2)) / (max(p2) - min(p2))
-        norm_diff = norm1 - norm2
+        spread = p1 - p2
+        return spread
 
-        thresh = self._factor * np.std(norm_diff)
-        return thresh
+    def get_spread(self, norm=True):
+        p1 = np.array(self._data[self._idx1])
+        p2 = np.array(self._data[self._idx2])
 
-    def save_spread(self, plot=True, name='BenchmarkSpread'):
-        idx1 = self._data.columns[0]
-        idx2 = self._data.columns[1]
-        spread = self._data[idx1] - self._data[idx2]
-        spread.name = 'Spread'
-        path = './Benchmark/' + name + '_' + idx1[1:] + '_' + idx2[1:]
-        spread.to_csv(path + '.csv')
+        if norm:
+            norm1 = (p1 - max(p1)) / (max(p1) - min(p1))
+            norm2 = (p2 - max(p2)) / (max(p2) - min(p2))
+            spread = norm1 - norm2
+        else:
+            spread = p1 - p2
+
+        return spread
+
+    def save_spread(self, spread=[], plot=True, name='BenchmarkSpread'):
+        df = pd.DataFrame(index=self._data.index)
+        df['Spread'] = spread
+        path = './Benchmark/' + name + '_' + self._idx1[1:] + '_' + self._idx2[1:]
+        df.to_csv(path + '.csv')
 
         if plot:
             n = len(spread)
             plt.figure(figsize=(12, 8))
-            plt.title(f'Distance approach {idx1[1:]}-{idx2[1:]} spread', size=20)
-            plt.plot(spread.index, spread)
-            plt.xticks(spread.index[::n // 6])
+            plt.title(f'Distance approach {self._idx1[1:]}-{self._idx2[1:]} spread', size=20)
+            plt.plot(df.index, spread)
+            plt.xticks(df.index[::n // 6])
             plt.xlabel('time', size=15)
             plt.ylabel('spread', size=15)
             plt.savefig(path + '.png')

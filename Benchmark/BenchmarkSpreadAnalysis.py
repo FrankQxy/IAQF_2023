@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
 
-def clean_data():
-    spread = pd.read_csv('./Benchmark/BenchmarkSpread_GSPC_IXIC.csv')
+def clean_data(data=[], spread=[]):
     vix_data = pd.read_csv('./DataFiles/vix_data.csv')
     yld = pd.read_csv('./DataFiles/yield.csv')
 
     vix_data.drop_duplicates(inplace=True)
     yld.drop_duplicates(inplace=True)
 
-    dates = spread['Date']
+    dates = data.index
     vix_data.set_index(['Date'], inplace=True)
     vix_data = vix_data.loc[dates].fillna(method='ffill')
 
@@ -29,16 +28,15 @@ def clean_data():
     fedfunds = fedfunds.fillna(method='ffill')
 
     df = pd.DataFrame()
-    df['Dates'] = dates.values
+    df['Dates'] = dates
     df['Vix'] = vix_data['^GSPCVIX'].values
     df['Fedfunds'] = fedfunds['Fedfunds'].values
-    df['Spread'] = spread['Spread'].values
+    df['Spread'] = spread
 
     return df
 
 
-def linear_regression():
-    df = clean_data()
+def linear_regression(df):
     X = df[["Vix", "Fedfunds"]]
     y = df["Spread"]
     X = sm.add_constant(X)
