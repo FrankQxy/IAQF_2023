@@ -18,6 +18,8 @@ class NaiveMachineLearningStrategy(IStrategy):
         self.spread_std = self.model_training_get_spread_std()
         self._name = 'Machine Learning Strategy'
         self.state = 'inactive'
+        #After 
+        self.spread = []
 
     def model_training_get_spread_std(self):
         X_train = np.array(self._data.X)
@@ -35,16 +37,25 @@ class NaiveMachineLearningStrategy(IStrategy):
         std = np.std(spread)
         
         return std
-
-    def compute_z_score(self, backtesting_prices):
+    
+    #After initialize the strategy, call this function to get spread of test data
+    def get_test_spread(self, backtesting_prices):
         X_test = np.array(backtesting_prices.X)
         y_test = np.array(backtesting_prices.y)
         poly = PolynomialFeatures(degree=4, include_bias=False)
         poly_features = poly.fit_transform(X_test.reshape(-1, 1))
         y_test_pred = self.model.predict(poly_features)
-        #Calculate spread and z-score for testing data
+        #Calculate spread for testing data
         spread = y_test-y_test_pred
-        z_score = spread/spread_std
+        self.spread = spread
+        
+        return spread
+        
+
+    def compute_z_score(self, backtesting_prices):
+        #Calculate spread and z-score for testing data
+        spread = self.get_test_spread(backtesting_prices)
+        z_score = spread/self.spread_std
 
         return z_score
 
