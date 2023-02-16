@@ -11,9 +11,9 @@ from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.metrics import classification_report, mean_squared_error, mean_absolute_error, accuracy_score, r2_score
 from IStrategy import IStrategy
 
-class NaiveMachineLearningStrategy(IStrategy):
+class NaiveMachineLearningStrategy(IStrategy， data = []):
     def __init__(self):
-        super().__init__()
+        super().__init__(data)
         self.model = None
         self.spread_std = self.model_training_get_spread_std()
         self._name = 'Machine Learning Strategy'
