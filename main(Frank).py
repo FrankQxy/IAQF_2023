@@ -9,10 +9,13 @@ from Benchmark import BenchmarkSpreadAnalysis
 
 
 if __name__ == "__main__":
-    price_data = get_data(type='index', col_list=['^IXIC', '^RUA'], termDates=['1992-01-02','2011-12-30'])
+    price_data = get_data(type='index', col_list=['^GSPC', '^RUA'], termDates=['2001-01-02','2011-12-30'])
+    #data = pd.read_csv('./DataFiles/etf_prices.csv')
+    #data = data.set_index('Date')
+    #price_data = data[['SPY','QQQ']].loc['2001-01-02':'2011-12-30']
     benchmark = BenchmarkStrategy(data=price_data)
     spread = benchmark.get_spread()
-    benchmark.save_spread(spread)
+    #benchmark.save_spread(spread)
     df = BenchmarkSpreadAnalysis.clean_data(price_data, spread)
     print(BenchmarkSpreadAnalysis.linear_regression(df))
 

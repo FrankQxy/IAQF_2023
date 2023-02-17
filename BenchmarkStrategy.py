@@ -57,7 +57,7 @@ class BenchmarkStrategy(IStrategy):
     def save_spread(self, spread=[], plot=True, name='BenchmarkSpread'):
         df = pd.DataFrame(index=self._data.index)
         df['Spread'] = spread
-        path = './Benchmark/' + name + '_' + self._idx1[1:] + '_' + self._idx2[1:]
+        path = './Benchmark/Spread/' + name + '_' + self._idx1 + '_' + self._idx2
         df.to_csv(path + '.csv')
 
         if plot:
