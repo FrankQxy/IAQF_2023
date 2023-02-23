@@ -17,9 +17,9 @@ import matplotlib.pyplot as plt
 
 
 #number of days of history used to callibrate parameter
-DAYS=10
+DAYS=20
 #number of days before the need of re-callibration
-SAFE=10
+SAFE=30
 
 class StochasticOUStrategy(IStrategy):
 
@@ -137,12 +137,7 @@ class StochasticOUStrategy(IStrategy):
             xab=np.array([idx0[i]-idx1[i]*b for i in range(0,len(idx0))])
 
             theta, miu, sigma = given_beta(b)
-            sigma_c = np.sqrt(sigma**2*((1-np.exp(-2*miu*dt))/(2*miu)))
-
-            summation=0
-            for i in range(1,len(xab)):
-                summation = summation + (xab[i]-xab[i-1]*np.exp(-miu*dt)-theta*(1-np.exp(-miu*dt)))**2
-            return -0.5*(np.log(2*np.pi))-np.log(sigma_c)-summation/(2*n*(sigma_c**2))
+            return miu
         
         def neg_l(b):
             # print("                      b  ",-l(b))
@@ -215,7 +210,7 @@ class StochasticOUStrategy(IStrategy):
 # test.callibration(np.array([220,190,220,190,220,190]),np.array([110,101,100,100,100,110]))
 # print(test._beta)
 
-price_data = get_data(type='index', col_list=['^IXIC','^GSPC'], termDates=['2022-01-20','2022-12-30'])
+price_data = get_data(type='index', col_list=['^IXIC','^GSPC'], termDates=['2001-01-30','2001-04-30'])
 strategy = StochasticOUStrategy()
 backtest = backtest_walk_forward(price_data)
 backtest.add_strategy(strategy)

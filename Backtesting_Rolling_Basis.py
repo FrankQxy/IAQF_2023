@@ -1,4 +1,4 @@
-from MachineLearningStrategy_v1 import NaiveMachineLearningStrategy
+from MachineLearningStrategy_v2 import NaiveMachineLearningStrategy
 import numpy as np
 import pandas as pd
 import pyfolio as pf
@@ -13,7 +13,7 @@ def Backtesting_Rolling_Basis(backtesting_prices, test_size, train_test_ratio):
         data_train, data_test = backtesting_prices[test_size*i:test_size*(i+train_test_ratio)], backtesting_prices[test_size*(i+train_test_ratio):test_size*(i+train_test_ratio+1)]
         #Initialize the strategy, change to your own class when testing
         my_strategy = NaiveMachineLearningStrategy(data = data_train)
-        strategy = my_strategy.generate_signal(data_test)
+        strategy = my_strategy.generate_signal_with_risk_management(data_test)
         x_test = np.array(data_test['index_x'])
         y_test = np.array(data_test['index_y'])
         temp_returns = Get_return_equal_weighted_portfolio(strategy, x_test, y_test)
@@ -22,7 +22,7 @@ def Backtesting_Rolling_Basis(backtesting_prices, test_size, train_test_ratio):
     #Deal with the last incomplete period
     data_train, data_remain = backtesting_prices[test_size*(i+1):test_size*(i+train_test_ratio+1)], backtesting_prices[test_size*(i+train_test_ratio+1):]  
     my_strategy = NaiveMachineLearningStrategy(data = data_train)
-    strategy = my_strategy.generate_signal(data_remain)
+    strategy = my_strategy.generate_signal_with_risk_management(data_remain, close = True)
     x_remain = np.array(data_remain['index_x'])
     y_remain = np.array(data_remain['index_y'])
     temp_returns = Get_return_equal_weighted_portfolio(strategy, x_remain, y_remain)
