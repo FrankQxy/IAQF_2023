@@ -12,14 +12,19 @@ from sympy import symbols, solve
 import math
 from mpmath import nsum, inf
 import matplotlib.pyplot as plt
-
-
+from scipy.optimize import brute
+import matplotlib.dates as mdates
+import datetime as dt
 
 
 #number of days of history used to callibrate parameter
-DAYS=20
+DAYS=30
 #number of days before the need of re-callibration
-SAFE=30
+SAFE=20
+
+#How many standard deviation do we get in and out of a trade
+IN=2
+OUT=0
 
 class StochasticOUStrategy(IStrategy):
 
@@ -41,7 +46,8 @@ class StochasticOUStrategy(IStrategy):
     _mean_adjusted_spreads=[]
     _means_list=[]
     _betas_list=[]
-
+    _vols_list=[]
+    _day=0
 
     #?????maybe weight can be outside of strategy
     def __init__(self, data = [], state="inactive", weight = 1.0, capital=100):
@@ -50,6 +56,7 @@ class StochasticOUStrategy(IStrategy):
         self._data={}
 
     def generate_signal(self,element):
+        self._day+=1
         idx = [asset for asset in element]
         #storing data
         if(len(self._data)==0):
@@ -84,6 +91,7 @@ class StochasticOUStrategy(IStrategy):
         self._means_list.append(self._theta)
         #updating the array of betas
         self._betas_list.append(self._beta)
+        self._vols_list.append(self._sigma)
         current_spread=element[idx[0]]-self._beta*element[idx[1]]
 
         if(self._current_position[idx[0]]>0 and element[idx[0]]-current_spread>=self._bl):
@@ -94,15 +102,14 @@ class StochasticOUStrategy(IStrategy):
             self._state="inactive"
         if(current_spread<=self._al):
             #?????this should depends on capital
-            self._current_position[idx[0]]+=1
-            self._current_position[idx[1]]-=self._beta*1
+            self._current_position[idx[0]]=1
+            self._current_position[idx[1]]=-self._beta*1
             self._state="active"
-            return self._current_position.copy()
         if(current_spread>=self._as):
-            self._current_position[idx[0]]-=1
-            self._current_position[idx[1]]+=self._beta*1
+            self._current_position[idx[0]]=-1
+            self._current_position[idx[1]]=self._beta*1
             self._state="active"
-            return self._current_position.copy()
+        return self._current_position.copy()
 
             
 
@@ -123,7 +130,7 @@ class StochasticOUStrategy(IStrategy):
             # print("@@@@@@@@@@@@@@@@@@@@@@ theta   ",theta)
 
             miu=-(1/dt)*np.log((xxy-theta*xx-theta*xy+n*(theta)**2)/(xxx-2*theta*xx+n*(theta)**2))
-            # print("@@@@@@@@@@@@@@@@@@@@@@ miu   ",miu)
+
 
             sigma=np.sqrt(((2*miu)/(n*(1-np.exp(-2*miu*dt))))*(xyy-2*np.exp(-miu*(dt))*xxy+np.exp(-2*miu*dt)*xxx
             -2*theta*(1-np.exp(-miu*dt))*(xy-np.exp(-miu*dt)*xx)+n*(theta)**2*(1-np.exp(-miu*dt))**2))
@@ -131,7 +138,7 @@ class StochasticOUStrategy(IStrategy):
 
 
             return theta, miu, sigma
-
+ 
         def l(b):
             #repeat
             xab=np.array([idx0[i]-idx1[i]*b for i in range(0,len(idx0))])
@@ -140,14 +147,32 @@ class StochasticOUStrategy(IStrategy):
             return miu
         
         def neg_l(b):
+            b=b[0]
             # print("                      b  ",-l(b))
             return -l(b)
 
-        self._beta = minimize_scalar(neg_l).x
-        
+        bounds_of_beta=(np.mean(idx0)/np.mean(idx1)-1,np.mean(idx0)/np.mean(idx1)+1)
+        print(bounds_of_beta)
+        # self._beta = minimize_scalar(neg_l,bounds=(-2, 2)).x
+        self._beta=brute(neg_l,(bounds_of_beta,), finish=None)   
         self._theta, self._miu, self._sigma = given_beta(self._beta)
+
+
+        actual_mean=np.mean(idx0-self._beta*idx1)
+        if((idx0-self._beta*idx1>self._miu).all() or (idx0-self._beta*idx1<self._miu).all()):
+            self._theta=actual_mean
+            print("HERERERERERERERERERERRRERE")
+            print("self._miu  ",self._miu)
+            print("self._beta  ",self._beta)
+
+        print("day ",self._day)
         print(self._theta, self._miu, self._sigma)
 
+
+        self._al=-IN*self._sigma+self._theta
+        self._bl=OUT*self._sigma+self._theta
+        self._as=IN*self._sigma+self._theta
+        self._bs=-OUT*self._sigma+self._theta
         # #??????same as linear regression OLS?
         # reg = LinearRegression(fit_intercept=False).fit(idx1.reshape(-1, 1), idx0)
         # print("!!!!!!!!!!!!!!!!!!!OLS Beta ",reg.coef_)
@@ -198,7 +223,13 @@ class StochasticOUStrategy(IStrategy):
         '''
         return the betas of the OU process modeled spreads
         '''
-        return pd.DataFrame({"betas":self._betas_list})       
+        return pd.DataFrame({"betas":self._betas_list})   
+
+    def get_vols_list(self):
+        '''
+        return the vols of the OU process modeled spreads
+        '''
+        return pd.DataFrame({"betas":self._vols_list})   
 
     def stop_loss():
         #TODO
@@ -210,14 +241,60 @@ class StochasticOUStrategy(IStrategy):
 # test.callibration(np.array([220,190,220,190,220,190]),np.array([110,101,100,100,100,110]))
 # print(test._beta)
 
-price_data = get_data(type='index', col_list=['^IXIC','^GSPC'], termDates=['2001-01-30','2001-04-30'])
+price_data = get_data(type='index', col_list=['^IXIC','^GSPC'], termDates=['2001-02-10','2022-05-30'])
 strategy = StochasticOUStrategy()
-backtest = backtest_walk_forward(price_data)
-backtest.add_strategy(strategy)
-trades = backtest.run_backtest()
-spread= strategy.get_spreads()
-spread_and_params=pd.concat([spread,strategy.get_means_list(),strategy.get_betas_list()], axis=1)
+
+assets = list(price_data.copy())
+capital=1
+# setting up trade dataframe
+trades = pd.DataFrame(index=price_data.index.copy())
+curr_price={}
+prev_position={}
+for asset in assets:
+    prev_position[asset]=0
+for index,row in price_data.iterrows():
+    prev_price=curr_price.copy()
+    # constructing current price dict
+    delta_price={}
+    daily_gain=0
+    investment=0
+    for asset in assets:
+        curr_price[asset] = row[asset]
+        delta_price[asset]=0
+        if(prev_price):
+            delta_price[asset]=curr_price[asset]-prev_price[asset]
+            investment+=abs(prev_position[asset])*prev_price[asset]
+        daily_gain+=prev_position[asset]*delta_price[asset]
+        if(investment==0):
+            daily_return=0
+        else:
+            daily_return=daily_gain/investment
+    
+        
+    # updates trade object with final positions
+    for asset in prev_position:
+        trades.loc[index,asset+"_Signal"] = prev_position[asset]
+    trades.loc[index,"daily_return"]=daily_return
+    capital=capital*(1+daily_return)
+    trades.loc[index,"capital"]=capital
+
+    prev_position=strategy.generate_signal(curr_price)
+trades["spreads"] = [np.nan]*DAYS+strategy.get_spreads()["mean-adjusted spreads"].tolist()
+    
+# backtest = backtest_walk_forward(price_data)
+# backtest.add_strategy(strategy)
+# trades = backtest.run_backtest()
+# spread= strategy.get_spreads()
+# spread_and_params=pd.concat([spread,strategy.get_means_list(),strategy.get_betas_list()], axis=1)
 pd.set_option('display.max_rows', None)
-print(spread_and_params)
-plt.plot(spread_and_params["original-spreads"])
+# print(spread_and_params)
+# plt.plot(spread_and_params["mean-adjusted spreads"])
+# plt.plot(3*strategy.get_vols_list())
+# plt.plot(-3*strategy.get_vols_list())
+# plt.plot([0]*len(strategy.get_vols_list()))
+# plt.show()
+print(trades)
+pd.to_datetime(trades.index)
+plt.gca().xaxis.set_major_locator(mdates.YearLocator())
+plt.plot(trades.index,trades["capital"])
 plt.show()
